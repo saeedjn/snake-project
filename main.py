@@ -1,12 +1,15 @@
+import time
+
 import pygame
 import random
 
 pygame.init()
+pygame.font.init()
 
-cell_size = 20
+cell_size = 10
 
-rows = 15
-cols = 30
+rows = 50
+cols = 60
 
 snake = [(10, 9), (10, 8), (10, 7)]
 food = (random.randint(0, cols - 1), random.randint(0, rows - 1))
@@ -16,6 +19,8 @@ score = 0
 screen = pygame.display.set_mode((cols * cell_size, rows * cell_size))
 pygame.display.set_caption("Snake Game")
 
+font = pygame.font.SysFont(None, 30)
+clock = pygame.time.Clock()
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GREEN = (0, 255, 0)
@@ -24,7 +29,8 @@ RED = (255, 0, 0)
 
 def draw():
     screen.fill(BLACK)
-
+    score_text = font.render(f"Score: {score}", True, WHITE)
+    screen.blit(score_text, (10, 10))
     for x, y in snake:
         pygame.draw.rect(screen, GREEN, (x * cell_size, y * cell_size, cell_size, cell_size))
 
@@ -99,7 +105,14 @@ while running:
     clock.tick(10)
     running = handlel_keys()
     if not move_snake():
-        print("Game Over")
+        gameOver_text = font.render("Game Over", True, RED)
+        w = screen.get_size()[0]
+        h = screen.get_size()[1]
+        rect = gameOver_text.get_rect()
+        rect.center = (w//2, h//2)
+        screen.blit(gameOver_text, rect)
+        pygame.display.update()
+        time.sleep(2)
         break
     draw()
 
