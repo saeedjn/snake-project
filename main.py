@@ -1,5 +1,3 @@
-import time
-
 import pygame
 import random
 
@@ -24,7 +22,6 @@ screen = pygame.display.set_mode((cols * cell_size, rows * cell_size))
 pygame.display.set_caption("Snake Game")
 
 font = pygame.font.SysFont(None, 30)
-clock = pygame.time.Clock()
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GREEN = (0, 255, 0)
@@ -91,20 +88,24 @@ opposite_dir = {
 
 def handle_keys():
     global direction
+    start_dir = direction
+    handled = False
+
     for event in pygame.event.get():
+        pygame.time.wait(1)
         if event.type == pygame.QUIT:
             return False
         elif event.type == pygame.KEYDOWN:
-            if event.key in key_map:
+            if event.key in key_map and not handled:
                 new_dir = key_map[event.key]
-                if new_dir != opposite_dir[direction]:
+                if new_dir != opposite_dir[start_dir]:
                     direction = new_dir
+                    handled = True
     return True
 
 def game_over():
     text = font.render("Game Over", True, RED)
-    w = screen.get_size()[0]
-    h = screen.get_size()[1]
+    w,h = screen.get_size()
     rect = text.get_rect()
     rect.center = (w // 2, h // 2)
     screen.blit(text, rect)
@@ -127,29 +128,29 @@ def create_btn(x,y,w,h,color,msg):
 
 def create_modal(msg):
     global snake, direction, food, score, running
+    w,h = screen.get_size()
+    modal_w, modal_h = w // 2, h // 3
+    modal_x, modal_y = (w - modal_w) // 2, (h - modal_h) // 2
+    border = 5
     while True:
-        w = screen.get_size()[0]
-        h = screen.get_size()[1]
-        modal_w = w // 2
-        modal_h = h // 3
-        modal_x = (w - modal_w) // 2
-        modal_y = (h - modal_h) // 2
-        border = 5
         pygame.draw.rect(screen, RED, pygame.Rect(modal_x, modal_y, modal_w + border, modal_h + border))
         pygame.draw.rect(screen, WHITE, pygame.Rect(modal_x, modal_y, modal_w, modal_h))
+
         text = font.render(msg, True, RED)
         rect = text.get_rect()
         rect.center = (modal_x + modal_w // 2, modal_y + 20)
         screen.blit(text, rect)
-        btn_R = create_btn(modal_x + 20, modal_y, modal_w, modal_h, GREEN, "ReStart")
-        btn_E = create_btn(modal_x + modal_w // 2 + 20, modal_y, modal_w, modal_h, GREEN, "Exit")
+
+        btn_r = create_btn(modal_x + 20, modal_y, modal_w, modal_h, GREEN, "ReStart")
+        btn_e = create_btn(modal_x + modal_w // 2, modal_y, modal_w, modal_h, GREEN, "Exit")
+
         pygame.display.update()
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return "quit"
             elif event.type == pygame.MOUSEBUTTONUP:
-                mouse_x, mouse_y = event.pos
-                if btn_R.collidepoint(mouse_x, mouse_y):
+                if btn_r.collidepoint(event.pos):
                     snake = [(10, 9), (10, 8), (10, 7)]
                     food = (random.randint(0, cols - 1), random.randint(0, rows - 1))
                     direction = (1, 0)
@@ -157,7 +158,7 @@ def create_modal(msg):
                     running = True
                     draw()
                     return "restart"
-                if btn_E.collidepoint(mouse_x, mouse_y):
+                if btn_e.collidepoint(event.pos):
                     running = False
                     return "exit"
 
