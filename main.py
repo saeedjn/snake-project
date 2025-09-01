@@ -113,14 +113,17 @@ def game_over():
     pygame.time.wait(800)
 
 
-def create_btn(x,y,w,h,color,msg):
-    btn_width = w // 3
-    btn_height = 50
-    btn_x = x + 20
-    btn_y = y + h - btn_height - 20
-    btn_rect = pygame.Rect(btn_x, btn_y, btn_width, btn_height)
+def create_btn(modal,pos,padding ,color,msg):
+    x,y,w,h = modal
+    btn_w, btn_h = w // 4, h // 6
+    if pos == "right" :
+        btn_rect = pygame.Rect((x + w - btn_w  - 20) + padding , (y + h) - 40, btn_w, btn_h)
+    else:
+        btn_rect = pygame.Rect(x + 20 + padding , (y + h) - 40, btn_w, btn_h)
+
     pygame.draw.rect(screen,color, btn_rect)
-    text = font.render(msg, True, BLACK)
+    font_btn = pygame.font.SysFont("Arial", 20)
+    text = font_btn.render(msg, True, BLACK)
     rect = text.get_rect()
     rect.center = btn_rect.center
     screen.blit(text, rect)
@@ -134,15 +137,15 @@ def create_modal(msg):
     border = 5
     while True:
         pygame.draw.rect(screen, RED, pygame.Rect(modal_x, modal_y, modal_w + border, modal_h + border))
-        pygame.draw.rect(screen, WHITE, pygame.Rect(modal_x, modal_y, modal_w, modal_h))
+        modal = pygame.draw.rect(screen, WHITE, pygame.Rect(modal_x, modal_y, modal_w, modal_h))
 
         text = font.render(msg, True, RED)
         rect = text.get_rect()
         rect.center = (modal_x + modal_w // 2, modal_y + 20)
         screen.blit(text, rect)
 
-        btn_r = create_btn(modal_x + 20, modal_y, modal_w, modal_h, GREEN, "ReStart")
-        btn_e = create_btn(modal_x + modal_w // 2, modal_y, modal_w, modal_h, GREEN, "Exit")
+        btn_r = create_btn(modal,"left",0, GREEN, "ReStart")
+        btn_e = create_btn(modal,"right",0, RED, "Quit")
 
         pygame.display.update()
 
@@ -162,19 +165,61 @@ def create_modal(msg):
                     running = False
                     return "exit"
 
-while running:
-    clock.tick(10)
-    running = handle_keys()
-    if not move_snake():
-        game_over()
-        modal_result = create_modal("Are Exit The Game? ")
-        if modal_result == "quit" or modal_result == "exit":
-            break
-        elif modal_result == "restart":
-            continue
-    draw()
-
-pygame.quit()
 
 
+def setting_modal():
+    global running
+    w,h = screen.get_size()
+    modal_w, modal_h = w // 2, h // 3
+    modal_x, modal_y = (w - modal_w) // 2, (h - modal_h) // 2
+    border = 5
+    font_btn = pygame.font.SysFont("Arial", 20)
+    while True:
+        screen.fill(BLACK)
 
+        pygame.draw.rect(screen, GREEN, pygame.Rect(modal_x, modal_y, modal_w + border, modal_h + border))
+        modal = pygame.draw.rect(screen, WHITE, pygame.Rect(modal_x, modal_y, modal_w, modal_h))
+
+        text = font_btn.render("Settings", True, RED)
+        rect = text.get_rect()
+        rect.center = (modal_x + modal_w // 2, modal_y + 20)
+        screen.blit(text, rect)
+
+        btn_s = create_btn(modal,"left",0,GREEN, "Start")
+        btn_e = create_btn(modal, "right",0,RED, "Quit")
+
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return "exit"
+            elif event.type == pygame.MOUSEBUTTONUP:
+                if btn_s.collidepoint(event.pos):
+                    return "start"
+                if btn_e.collidepoint(event.pos):
+                    running = False
+                    return "exit"
+
+
+
+def snake_game():
+    global running
+    result_set = setting_modal()
+    if result_set == "start":
+        screen.fill(BLACK)
+        pygame.display.update()
+        while running:
+            clock.tick(10)
+            running = handle_keys()
+            if not move_snake():
+                game_over()
+                modal_result = create_modal("Do you want Exit The Game? ")
+                if modal_result == "quit" or modal_result == "exit":
+                    break
+                elif modal_result == "restart":
+                    continue
+            draw()
+    elif result_set == "exit":
+        pygame.quit()
+
+
+snake_game()
