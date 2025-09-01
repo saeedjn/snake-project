@@ -11,6 +11,8 @@ cell_size = 10
 rows = 50
 cols = 60
 
+game_mode = "tunnel"
+
 snake = [(10, 9), (10, 8), (10, 7)]
 food = (random.randint(0, cols - 1), random.randint(0, rows - 1))
 direction = (1, 0)
@@ -42,7 +44,7 @@ def draw():
 
 
 def move_snake():
-    global snake, food, score
+    global snake, food, score, game_mode
     head_x, head_y = snake[0]
     dx, dy = direction
     new_head = (head_x + dx, head_y + dy)
@@ -50,8 +52,24 @@ def move_snake():
     if new_head in snake:
         return False
 
-    if not (0 <= new_head[0] < cols) or not (0 <= new_head[1] < rows):
-        return False
+    if game_mode == "wall" :
+        if not (0 <= new_head[0] < cols) or not (0 <= new_head[1] < rows):
+            return False
+    elif game_mode == "tunnel":
+        x,y = new_head
+        if x < 0 :
+            x = cols - 1
+        elif x >= cols:
+            x = 0
+
+        if y < 0 :
+            y = rows - 1
+        elif y >= rows:
+            y = 0
+
+        new_head = (x,y)
+
+
 
     snake.insert(0, new_head)
 
