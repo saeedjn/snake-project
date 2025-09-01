@@ -12,10 +12,13 @@ rows = 50
 cols = 60
 
 game_mode = "tunnel"
+random_wall_mode = False
 
 snake = [(10, 9), (10, 8), (10, 7)]
 food = (random.randint(0, cols - 1), random.randint(0, rows - 1))
 direction = (1, 0)
+random_wall_dest = []
+number_of_random_wall = 0
 score = 0
 running = True
 
@@ -33,7 +36,9 @@ RED = (255, 0, 0)
 def draw():
     screen.fill(BLACK)
     score_text = font.render(f"Score: {score}", True, WHITE)
+    mode_wall_text = font.render(f"Mode: {game_mode}", True, WHITE)
     screen.blit(score_text, (10, 10))
+    screen.blit(mode_wall_text, (120, 10))
     for x, y in snake:
         pygame.draw.rect(screen, GREEN, (x * cell_size, y * cell_size, cell_size, cell_size))
 
@@ -41,6 +46,43 @@ def draw():
     pygame.draw.rect(screen, RED, (fx * cell_size, fy * cell_size, cell_size, cell_size))
 
     pygame.display.update()
+
+
+def random_wall():
+    len_wall = 4
+    if random_wall_mode :
+        while number_of_random_wall > len(random_wall_dest) :
+
+            wall = []
+            dir_wall = random.choice(["v", "h"])
+
+            cell_start = (random.randint(0, cols - 7), random.randint(0, rows - 7))
+            if cell_start in snake and cell_start == food:
+                continue
+
+            wall.append(cell_start)
+            valid = True
+            new_cell = None
+
+            for i in range(1, len_wall) :
+                x,y = wall[-1]
+                if dir_wall == "v":
+                    new_cell = (x ,y + 1)
+                    if new_cell in snake or new_cell == food or new_cell[1] >= rows:
+                        valid = False
+                        break
+                elif dir_wall == "h":
+                    new_cell = (x + 1 ,y)
+                    if new_cell in snake or new_cell == food or new_cell[0] >= cols:
+                        valid = False
+                        break
+                wall.append(new_cell)
+
+            if valid:
+                random_wall_dest.append(wall)
+
+
+
 
 
 def move_snake():
