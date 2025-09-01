@@ -57,7 +57,7 @@ def random_wall():
             dir_wall = random.choice(["v", "h"])
 
             cell_start = (random.randint(0, cols - 7), random.randint(0, rows - 7))
-            if cell_start in snake and cell_start == food:
+            if cell_start in snake or cell_start == food:
                 continue
 
             wall.append(cell_start)
@@ -79,7 +79,7 @@ def random_wall():
                 wall.append(new_cell)
 
             if valid:
-                random_wall_dest.append(wall)
+                random_wall_dest.extend(wall)
 
 
 
