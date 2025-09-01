@@ -12,13 +12,13 @@ rows = 50
 cols = 60
 
 game_mode = "tunnel"
-random_wall_mode = False
+random_wall_mode = True
 
 snake = [(10, 9), (10, 8), (10, 7)]
 food = (random.randint(0, cols - 1), random.randint(0, rows - 1))
 direction = (1, 0)
 random_wall_dest = []
-number_of_random_wall = 0
+number_of_random_wall = 5
 score = 0
 running = True
 
@@ -51,7 +51,7 @@ def draw():
 def random_wall():
     len_wall = 4
     if random_wall_mode :
-        while number_of_random_wall > len(random_wall_dest) :
+        while len(random_wall_dest) < number_of_random_wall :
 
             wall = []
             dir_wall = random.choice(["v", "h"])
@@ -62,7 +62,7 @@ def random_wall():
 
             wall.append(cell_start)
             valid = True
-            new_cell = None
+            new_cell = False
 
             for i in range(1, len_wall) :
                 x,y = wall[-1]
@@ -79,7 +79,7 @@ def random_wall():
                 wall.append(new_cell)
 
             if valid:
-                random_wall_dest.extend(wall)
+                random_wall_dest.append(wall)
 
 
 
@@ -267,6 +267,8 @@ def snake_game():
     if result_set == "start":
         screen.fill(BLACK)
         pygame.display.update()
+        random_wall()
+        print(random_wall_dest)
         while running:
             clock.tick(10)
             running = handle_keys()
