@@ -13,13 +13,15 @@ cols = 60
 
 game_mode = "tunnel"
 random_wall_mode = True
+speed_up_mode = True
 
 snake = [(10, 9), (10, 8), (10, 7)]
 food = (random.randint(0, cols - 1), random.randint(0, rows - 1))
 direction = (1, 0)
 random_wall_dest = []
-number_of_random_wall = 5
+number_of_random_wall = 10
 score = 0
+base_speed = 10
 running = True
 
 
@@ -37,13 +39,19 @@ def draw():
     screen.fill(BLACK)
     score_text = font.render(f"Score: {score}", True, WHITE)
     mode_wall_text = font.render(f"Mode: {game_mode}", True, WHITE)
+    mode_speed_text = font.render(f"Speed: {base_speed}", True, WHITE)
     screen.blit(score_text, (10, 10))
     screen.blit(mode_wall_text, (120, 10))
+    screen.blit(mode_speed_text, (280, 10))
     for x, y in snake:
         pygame.draw.rect(screen, GREEN, (x * cell_size, y * cell_size, cell_size, cell_size))
 
     fx, fy = food
     pygame.draw.rect(screen, RED, (fx * cell_size, fy * cell_size, cell_size, cell_size))
+
+    if random_wall_mode:
+        random_wall()
+        create_random_walls()
 
     pygame.display.update()
 
@@ -86,12 +94,16 @@ def random_wall():
 
 
 def move_snake():
-    global snake, food, score, game_mode
+    global snake, food, score, game_mode, base_speed, speed_up_mode, random_wall_dest
     head_x, head_y = snake[0]
     dx, dy = direction
     new_head = (head_x + dx, head_y + dy)
+    all_walls = [cell for wall in random_wall_dest for cell in wall]
 
     if new_head in snake:
+        return False
+
+    if new_head in all_walls:
         return False
 
     if game_mode == "wall" :
@@ -103,23 +115,22 @@ def move_snake():
             x = cols - 1
         elif x >= cols:
             x = 0
-
         if y < 0 :
             y = rows - 1
         elif y >= rows:
             y = 0
-
         new_head = (x,y)
-
-
 
     snake.insert(0, new_head)
 
+
     if new_head == food:
         score += 1
+        if speed_up_mode and base_speed < 25 and score % 5 == 0:
+            base_speed += 1
         while True:
             food = (random.randint(0, cols - 1), random.randint(0, rows - 1))
-            if food not in snake:
+            if food not in snake and food not in all_walls:
                 break
     else:
         snake.pop()
@@ -190,7 +201,7 @@ def create_btn(modal,pos,padding ,color,msg):
     return btn_rect
 
 def create_modal(msg):
-    global snake, direction, food, score, running
+    global snake, direction, food, score, running, random_wall_dest
     w,h = screen.get_size()
     modal_w, modal_h = w // 2, h // 3
     modal_x, modal_y = (w - modal_w) // 2, (h - modal_h) // 2
@@ -219,12 +230,21 @@ def create_modal(msg):
                     direction = (1, 0)
                     score = 0
                     running = True
+                    random_wall_dest = []
                     draw()
                     return "restart"
                 if btn_e.collidepoint(event.pos):
                     running = False
                     return "exit"
 
+
+def create_random_walls():
+    all_walls = [cell for wall in random_wall_dest for cell in wall]
+    for cell in all_walls:
+        x, y = cell
+        pygame.draw.rect(screen, WHITE, pygame.Rect(x * cell_size, y * cell_size,  cell_size, cell_size))
+
+    pygame.display.update()
 
 
 def setting_modal():
@@ -267,10 +287,8 @@ def snake_game():
     if result_set == "start":
         screen.fill(BLACK)
         pygame.display.update()
-        random_wall()
-        print(random_wall_dest)
         while running:
-            clock.tick(10)
+            clock.tick(base_speed)
             running = handle_keys()
             if not move_snake():
                 game_over()
@@ -279,6 +297,8 @@ def snake_game():
                     break
                 elif modal_result == "restart":
                     continue
+
+            screen.fill(BLACK)
             draw()
     elif result_set == "exit":
         pygame.quit()
