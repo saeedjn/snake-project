@@ -11,15 +11,23 @@ cell_size = 10
 rows = 50
 cols = 60
 
-game_mode = "tunnel"
-random_wall_mode = True
-speed_up_mode = True
+settings = {
+    "game_mode" : "wall",
+    "speed_up_mode" : False,
+    "random_wall_mode" : False,
+    "random_wall_count" : 5,
+    "player_name" : "Guest"
+}
+
+game_mode = settings["game_mode"]
+random_wall_mode = settings["random_wall_mode"]
+speed_up_mode = settings["speed_up_mode"]
 
 snake = [(10, 9), (10, 8), (10, 7)]
 food = (random.randint(0, cols - 1), random.randint(0, rows - 1))
 direction = (1, 0)
 random_wall_dest = []
-number_of_random_wall = 10
+number_of_random_wall = settings["random_wall_count"]
 score = 0
 base_speed = 10
 running = True
@@ -33,6 +41,17 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
+
+
+
+def create_text(text,font,size,color,x,y):
+    global screen
+    font_text = pygame.font.SysFont(font, size)
+    text = font_text.render(f"{text} ", True, color)
+    rect = text.get_rect()
+    rect.center = (x, y)
+    screen.blit(text, rect)
+
 
 
 def draw():
@@ -253,17 +272,18 @@ def setting_modal():
     modal_w, modal_h = w // 2, h // 3
     modal_x, modal_y = (w - modal_w) // 2, (h - modal_h) // 2
     border = 5
-    font_btn = pygame.font.SysFont("Arial", 20)
     while True:
         screen.fill(BLACK)
 
         pygame.draw.rect(screen, GREEN, pygame.Rect(modal_x, modal_y, modal_w + border, modal_h + border))
         modal = pygame.draw.rect(screen, WHITE, pygame.Rect(modal_x, modal_y, modal_w, modal_h))
 
-        text = font_btn.render("Settings", True, RED)
-        rect = text.get_rect()
-        rect.center = (modal_x + modal_w // 2, modal_y + 20)
-        screen.blit(text, rect)
+
+        create_text("Settings","Arial",20,RED,modal_x + modal_w // 2, modal_y + 20)
+        create_text("Player Name: ","Arial",15,RED,modal_x + modal_w // 4 - 20, modal_y + 40)
+        create_text("Game Mode: ","Arial",15,RED,modal_x + modal_w // 4 - 20 , modal_y + 70)
+        create_text("Random Walls: ","Arial",15,RED,modal_x + modal_w // 4 + 150 , modal_y + 70)
+        create_text("Speed Up Mode: ","Arial",15,RED,modal_x + modal_w // 4 - 10 , modal_y + 100)
 
         btn_s = create_btn(modal,"left",0,GREEN, "Start")
         btn_e = create_btn(modal, "right",0,RED, "Quit")
@@ -278,6 +298,7 @@ def setting_modal():
                 if btn_e.collidepoint(event.pos):
                     running = False
                     return "exit"
+
 
 
 
