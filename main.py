@@ -41,12 +41,38 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
+GRAY = (191, 187, 187)
 
 
+input_active_player = False
+def input_active(input_box,event):
+    global input_active_player
+    if event.type == pygame.MOUSEBUTTONDOWN:
+        if input_box.collidepoint(event.pos):
+            input_active_player = True
+        else:
+            input_active_player = False
 
-def create_text(text,font,size,color,x,y):
+
+def input_player_name(x,y,w,h):
+    global settings,input_active_player
+    player_name =  settings["player_name"]
+    input_box = pygame.Rect(x,y,w,h)
+    pygame.draw.rect(screen, GRAY, input_box)
+    create_text(player_name,"Arial",15,BLACK,input_box.x + 25, input_box.y + 12)
+    for event in pygame.event.get():
+        input_active(input_box,event)
+        if event.type == pygame.KEYDOWN and input_active_player:
+            if event.key == pygame.K_BACKSPACE:
+                player_name = player_name[:-1]
+            else:
+                player_name += event.unicode
+
+        settings["player_name"] = player_name
+
+def create_text(text,font_text,size,color,x,y):
     global screen
-    font_text = pygame.font.SysFont(font, size)
+    font_text = pygame.font.SysFont(font_text, size)
     text = font_text.render(f"{text} ", True, color)
     rect = text.get_rect()
     rect.center = (x, y)
@@ -107,10 +133,6 @@ def random_wall():
 
             if valid:
                 random_wall_dest.append(wall)
-
-
-
-
 
 def move_snake():
     global snake, food, score, game_mode, base_speed, speed_up_mode, random_wall_dest
@@ -281,6 +303,7 @@ def setting_modal():
 
         create_text("Settings","Arial",20,RED,modal_x + modal_w // 2, modal_y + 20)
         create_text("Player Name: ","Arial",15,RED,modal_x + modal_w // 4 - 20, modal_y + 40)
+        input_player_name(modal_x+100, modal_y + 30, 140, 25)
         create_text("Game Mode: ","Arial",15,RED,modal_x + modal_w // 4 - 20 , modal_y + 70)
         create_text("Random Walls: ","Arial",15,RED,modal_x + modal_w // 4 + 150 , modal_y + 70)
         create_text("Speed Up Mode: ","Arial",15,RED,modal_x + modal_w // 4 - 10 , modal_y + 100)
