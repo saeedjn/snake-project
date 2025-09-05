@@ -45,22 +45,6 @@ GRAY = (191, 187, 187)
 
 
 
-
-def input_player_name(x,y,w,h):
-    global settings,input_active_player
-    player_name =  settings["player_name"]
-    input_box = pygame.Rect(x,y,w,h)
-    pygame.draw.rect(screen, GRAY, input_box)
-    create_text(player_name,"Arial",15,BLACK,input_box.x + 25, input_box.y + 12)
-    for event in pygame.event.get():
-        if event.type == pygame.KEYDOWN and input_active_player:
-            if event.key == pygame.K_BACKSPACE:
-                player_name = player_name[:-1]
-            else:
-                player_name += event.unicode
-
-        settings["player_name"] = player_name
-
 def create_text(text,font_text,size,color,x,y):
     global screen
     font_text = pygame.font.SysFont(font_text, size)
