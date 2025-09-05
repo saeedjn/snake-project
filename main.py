@@ -1,6 +1,7 @@
 import pygame
 import random
 
+
 pygame.init()
 pygame.font.init()
 clock = pygame.time.Clock()
@@ -272,6 +273,7 @@ def setting_modal():
     player_name =  settings.get("player_name",'')
     input_box = pygame.Rect(modal_x+100, modal_y + 30, 140, 25)
     input_active_player = False
+    padding = 0
     while True:
         screen.fill(BLACK)
 
@@ -284,8 +286,9 @@ def setting_modal():
         create_text("Game Mode: ","Arial",15,RED,modal_x + modal_w // 4 - 20 , modal_y + 70)
         create_text("Random Walls: ","Arial",15,RED,modal_x + modal_w // 4 + 150 , modal_y + 70)
         create_text("Speed Up Mode: ","Arial",15,RED,modal_x + modal_w // 4 - 10 , modal_y + 100)
-        pygame.draw.rect(screen, GRAY if not input_active_player else WHITE, input_box)
-        create_text(player_name, "Arial", 15, BLACK, input_box.x + 25, input_box.y + 12)
+
+        pygame.draw.rect(screen, WHITE if not input_active_player else GRAY, input_box)
+        create_text(player_name, "Arial", 15, BLACK, input_box.x + 25 + padding, input_box.y + 12)
 
         btn_s = create_btn(modal,"left",0,GREEN, "Start")
         btn_e = create_btn(modal, "right",0,RED, "Quit")
@@ -298,16 +301,19 @@ def setting_modal():
                 else:
                     input_active_player = False
             if event.type == pygame.KEYDOWN and input_active_player:
-                if event.key == pygame.K_BACKSPACE:
+                if event.key == pygame.K_BACKSPACE and len(player_name) > 0:
                     player_name = player_name[:-1]
-                else:
+                    padding -= 3
+                elif len(player_name) < 15:
                     player_name += event.unicode
+                    padding += 3
+                    print(padding)
 
-            settings["player_name"] = player_name
             if event.type == pygame.QUIT:
                 return "exit"
             elif event.type == pygame.MOUSEBUTTONUP:
                 if btn_s.collidepoint(event.pos):
+                    settings["player_name"] = player_name
                     return "start"
                 if btn_e.collidepoint(event.pos):
                     running = False
