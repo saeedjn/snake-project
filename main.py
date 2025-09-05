@@ -44,14 +44,6 @@ RED = (255, 0, 0)
 GRAY = (191, 187, 187)
 
 
-input_active_player = False
-def input_active(input_box,event):
-    global input_active_player
-    if event.type == pygame.MOUSEBUTTONDOWN:
-        if input_box.collidepoint(event.pos):
-            input_active_player = True
-        else:
-            input_active_player = False
 
 
 def input_player_name(x,y,w,h):
@@ -61,7 +53,6 @@ def input_player_name(x,y,w,h):
     pygame.draw.rect(screen, GRAY, input_box)
     create_text(player_name,"Arial",15,BLACK,input_box.x + 25, input_box.y + 12)
     for event in pygame.event.get():
-        input_active(input_box,event)
         if event.type == pygame.KEYDOWN and input_active_player:
             if event.key == pygame.K_BACKSPACE:
                 player_name = player_name[:-1]
@@ -289,11 +280,14 @@ def create_random_walls():
 
 
 def setting_modal():
-    global running
+    global running, settings
     w,h = screen.get_size()
     modal_w, modal_h = w // 2, h // 3
     modal_x, modal_y = (w - modal_w) // 2, (h - modal_h) // 2
     border = 5
+    player_name =  settings.get("player_name",'')
+    input_box = pygame.Rect(modal_x+100, modal_y + 30, 140, 25)
+    input_active_player = False
     while True:
         screen.fill(BLACK)
 
@@ -303,16 +297,29 @@ def setting_modal():
 
         create_text("Settings","Arial",20,RED,modal_x + modal_w // 2, modal_y + 20)
         create_text("Player Name: ","Arial",15,RED,modal_x + modal_w // 4 - 20, modal_y + 40)
-        input_player_name(modal_x+100, modal_y + 30, 140, 25)
         create_text("Game Mode: ","Arial",15,RED,modal_x + modal_w // 4 - 20 , modal_y + 70)
         create_text("Random Walls: ","Arial",15,RED,modal_x + modal_w // 4 + 150 , modal_y + 70)
         create_text("Speed Up Mode: ","Arial",15,RED,modal_x + modal_w // 4 - 10 , modal_y + 100)
+        pygame.draw.rect(screen, GRAY if not input_active_player else WHITE, input_box)
+        create_text(player_name, "Arial", 15, BLACK, input_box.x + 25, input_box.y + 12)
 
         btn_s = create_btn(modal,"left",0,GREEN, "Start")
         btn_e = create_btn(modal, "right",0,RED, "Quit")
 
         pygame.display.update()
         for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if input_box.collidepoint(event.pos):
+                    input_active_player = True
+                else:
+                    input_active_player = False
+            if event.type == pygame.KEYDOWN and input_active_player:
+                if event.key == pygame.K_BACKSPACE:
+                    player_name = player_name[:-1]
+                else:
+                    player_name += event.unicode
+
+            settings["player_name"] = player_name
             if event.type == pygame.QUIT:
                 return "exit"
             elif event.type == pygame.MOUSEBUTTONUP:
