@@ -1,6 +1,6 @@
 import pygame
 import random
-
+import json
 
 pygame.init()
 pygame.font.init()
@@ -13,16 +13,36 @@ rows = 50
 cols = 60
 
 settings = {
-    "game_mode" : "wall",
-    "speed_up_mode" : False,
-    "random_wall_mode" : False,
-    "random_wall_count" : 5,
-    "player_name" : "Guest"
+    "game_mode": "wall",
+    "speed_up_mode": False,
+    "random_wall_mode": True,
+    "random_wall_count": 5,
+    "player_name": "Guest",
+    "high_score": 0
 }
 
-game_mode = settings["game_mode"]
-random_wall_mode = settings["random_wall_mode"]
-speed_up_mode = settings["speed_up_mode"]
+def save_settings():
+    with open("settings.txt",'w') as settingFile:
+        json.dump(settings, settingFile,indent=True)
+
+def load_settings():
+    global settings
+    try:
+        with open("settings.txt", 'r') as settingFile:
+            settings = json.load(settingFile)
+    except FileNotFoundError:
+        settings = {
+            "game_mode": "wall",
+            "speed_up_mode": False,
+            "random_wall_mode": True,
+            "random_wall_count": 5,
+            "player_name": "Guest",
+            "high_score": 0
+        }
+
+
+
+
 
 snake = [(10, 9), (10, 8), (10, 7)]
 food = (random.randint(0, cols - 1), random.randint(0, rows - 1))
@@ -40,9 +60,10 @@ pygame.display.set_caption("Snake Game")
 font = pygame.font.SysFont(None, 30)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-GREEN = (0, 255, 0)
-RED = (255, 0, 0)
+GREEN = (12, 156, 68)
+RED = (255, 86, 84)
 GRAY = (191, 187, 187)
+BLUE = (86, 130, 232)
 
 
 
@@ -54,17 +75,38 @@ def create_text(text,font_text,size,color,x,y):
     rect.center = (x, y)
     screen.blit(text, rect)
 
+def create_radio_button(x,y,selected=False, label=""):
+    global screen
+    radius = 6
+    pygame.draw.circle(screen, GRAY, (x,y),radius)
+    if selected:
+        pygame.draw.circle(screen, BLUE, (x,y),radius - 4)
+
+    font_text = pygame.font.SysFont("Arial", 10)
+    text = font_text.render(f"{label} ", True, BLACK)
+    rect = text.get_rect()
+    width = rect.width
+    padding = (x+width/2+radius+5,y)
+    rect.center = padding
+    screen.blit(text, rect)
+    radio_box = pygame.Rect(rect)
+    return radio_box
+
+
+
 
 
 def draw():
     screen.fill(BLACK)
     score_text = font.render(f"Score: {score}", True, WHITE)
-    mode_wall_text = font.render(f"Mode: {game_mode}", True, WHITE)
+    high_score_text = font.render(f"High Score: {settings.get('high_score', '')}", True, WHITE)
+    mode_wall_text = font.render(f"Mode: {settings.get('game_mode','')}", True, WHITE)
     mode_speed_text = font.render(f"Speed: {base_speed}", True, WHITE)
-    player_name_text = font.render(f"Name: {settings.get("player_name", "")}", True, WHITE)
+    player_name_text = font.render(f"Name: {settings.get('player_name', '')}", True, WHITE)
     screen.blit(score_text, (10, 10))
-    screen.blit(mode_wall_text, (120, 10))
-    screen.blit(mode_speed_text, (280, 10))
+    screen.blit(high_score_text, (120, 10))
+    screen.blit(mode_wall_text, (260, 10))
+    screen.blit(mode_speed_text, (480, 10))
     screen.blit(player_name_text, (10, 40))
     for x, y in snake:
         pygame.draw.rect(screen, GREEN, (x * cell_size, y * cell_size, cell_size, cell_size))
@@ -72,8 +114,7 @@ def draw():
     fx, fy = food
     pygame.draw.rect(screen, RED, (fx * cell_size, fy * cell_size, cell_size, cell_size))
 
-    if random_wall_mode:
-        random_wall()
+    if settings["random_wall_mode"]:
         create_random_walls()
 
     pygame.display.update()
@@ -81,7 +122,7 @@ def draw():
 
 def random_wall():
     len_wall = 4
-    if random_wall_mode :
+    if settings["random_wall_mode"]:
         while len(random_wall_dest) < number_of_random_wall :
 
             wall = []
@@ -113,7 +154,7 @@ def random_wall():
                 random_wall_dest.append(wall)
 
 def move_snake():
-    global snake, food, score, game_mode, base_speed, speed_up_mode, random_wall_dest
+    global snake, food, score, base_speed, random_wall_dest
     head_x, head_y = snake[0]
     dx, dy = direction
     new_head = (head_x + dx, head_y + dy)
@@ -125,10 +166,10 @@ def move_snake():
     if new_head in all_walls:
         return False
 
-    if game_mode == "wall" :
+    if settings["game_mode"] == "wall" :
         if not (0 <= new_head[0] < cols) or not (0 <= new_head[1] < rows):
             return False
-    elif game_mode == "tunnel":
+    elif settings["game_mode"] == "tunnel":
         x,y = new_head
         if x < 0 :
             x = cols - 1
@@ -145,7 +186,7 @@ def move_snake():
 
     if new_head == food:
         score += 1
-        if speed_up_mode and base_speed < 25 and score % 5 == 0:
+        if settings["speed_up_mode"] and base_speed < 25 and score % 5 == 0:
             base_speed += 1
         while True:
             food = (random.randint(0, cols - 1), random.randint(0, rows - 1))
@@ -194,6 +235,10 @@ def handle_keys():
     return True
 
 def game_over():
+    global settings, score
+    if score >= settings["high_score"]:
+        settings["high_score"] = score
+    save_settings()
     text = font.render("Game Over", True, RED)
     w,h = screen.get_size()
     rect = text.get_rect()
@@ -205,11 +250,11 @@ def game_over():
 
 def create_btn(modal,pos,padding ,color,msg):
     x,y,w,h = modal
-    btn_w, btn_h = w // 4, h // 6
+    btn_w, btn_h = w // 4, h // 8
     if pos == "right" :
-        btn_rect = pygame.Rect((x + w - btn_w  - 20) + padding , (y + h) - 40, btn_w, btn_h)
+        btn_rect = pygame.Rect((x + w - btn_w  - 20) + padding , (y + h) - 60, btn_w, btn_h)
     else:
-        btn_rect = pygame.Rect(x + 20 + padding , (y + h) - 40, btn_w, btn_h)
+        btn_rect = pygame.Rect(x + 20 + padding , (y + h) - 60, btn_w, btn_h)
 
     pygame.draw.rect(screen,color, btn_rect)
     font_btn = pygame.font.SysFont("Arial", 20)
@@ -269,13 +314,14 @@ def create_random_walls():
 def setting_modal():
     global running, settings
     w,h = screen.get_size()
-    modal_w, modal_h = w // 2, h // 3
+    modal_w, modal_h = w*0.75, h*0.75
     modal_x, modal_y = (w - modal_w) // 2, (h - modal_h) // 2
     border = 5
-    player_name =  settings.get("player_name",'')
-    input_box = pygame.Rect(modal_x+100, modal_y + 30, 140, 25)
+    input_empty = False
+    input_box = pygame.Rect(modal_x+130, modal_y + 30, 140, 25)
     input_active_player = False
     padding = 0
+    mode_game = settings["game_mode"]
     while True:
         screen.fill(BLACK)
 
@@ -286,11 +332,17 @@ def setting_modal():
         create_text("Settings","Arial",20,RED,modal_x + modal_w // 2, modal_y + 20)
         create_text("Player Name: ","Arial",15,RED,modal_x + modal_w // 4 - 20, modal_y + 40)
         create_text("Game Mode: ","Arial",15,RED,modal_x + modal_w // 4 - 20 , modal_y + 70)
+        radio_tunnel = create_radio_button(modal_x + modal_w // 4 + 25,modal_y + 70,True if mode_game == "tunnel" else False,"Tunnel")
+        radio_wall = create_radio_button(modal_x + modal_w // 4 + 75,modal_y + 70,True if mode_game == "wall" else False,"Wall")
         create_text("Random Walls: ","Arial",15,RED,modal_x + modal_w // 4 + 150 , modal_y + 70)
         create_text("Speed Up Mode: ","Arial",15,RED,modal_x + modal_w // 4 - 10 , modal_y + 100)
+        if input_active_player or input_empty:
+            color = GRAY
+        else:
+            color = WHITE
+        pygame.draw.rect(screen, color, input_box)
 
-        pygame.draw.rect(screen, WHITE if not input_active_player else GRAY, input_box)
-        create_text(player_name, "Arial", 15, BLACK, input_box.x + 25 + padding, input_box.y + 12)
+        create_text(settings["player_name"], "Arial", 15, BLACK, input_box.x + 25 + padding, input_box.y + 12)
 
         btn_s = create_btn(modal,"left",0,GREEN, "Start")
         btn_e = create_btn(modal, "right",0,RED, "Quit")
@@ -302,20 +354,32 @@ def setting_modal():
                     input_active_player = True
                 else:
                     input_active_player = False
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if radio_wall.collidepoint(event.pos):
+                        mode_game = "wall"
+                        settings["game_mode"] = "wall"
+                    elif radio_tunnel.collidepoint(event.pos):
+                        mode_game = "tunnel"
+                        settings["game_mode"] = "tunnel"
             if event.type == pygame.KEYDOWN and input_active_player:
-                if event.key == pygame.K_BACKSPACE and len(player_name) > 0:
-                    player_name = player_name[:-1]
+                if event.key == pygame.K_BACKSPACE and len(settings["player_name"]) > 0:
+                    settings["player_name"] = settings["player_name"][:-1]
                     padding -= 3
-                elif len(player_name) < 15:
-                    player_name += event.unicode
+                    if len(settings["player_name"]) == 0:
+                        input_empty = True
+                elif len(settings["player_name"]) < 15:
+                    settings["player_name"] += event.unicode
                     padding += 3
+                    if len(settings["player_name"]) > 0:
+                        input_empty = False
 
             if event.type == pygame.QUIT:
                 return "exit"
             elif event.type == pygame.MOUSEBUTTONUP:
                 if btn_s.collidepoint(event.pos):
-                    settings["player_name"] = player_name
-                    return "start"
+                    save_settings()
+                    if len(settings["player_name"]) > 0:
+                        return "start"
                 if btn_e.collidepoint(event.pos):
                     running = False
                     return "exit"
@@ -325,10 +389,13 @@ def setting_modal():
 
 def snake_game():
     global running
+    load_settings()
     result_set = setting_modal()
     if result_set == "start":
         screen.fill(BLACK)
         pygame.display.update()
+        if settings["random_wall_mode"]:
+            random_wall()
         while running:
             clock.tick(base_speed)
             running = handle_keys()
