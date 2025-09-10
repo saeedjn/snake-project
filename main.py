@@ -61,9 +61,11 @@ def draw():
     score_text = font.render(f"Score: {score}", True, WHITE)
     mode_wall_text = font.render(f"Mode: {game_mode}", True, WHITE)
     mode_speed_text = font.render(f"Speed: {base_speed}", True, WHITE)
+    player_name_text = font.render(f"Name: {settings.get("player_name", "")}", True, WHITE)
     screen.blit(score_text, (10, 10))
     screen.blit(mode_wall_text, (120, 10))
     screen.blit(mode_speed_text, (280, 10))
+    screen.blit(player_name_text, (10, 40))
     for x, y in snake:
         pygame.draw.rect(screen, GREEN, (x * cell_size, y * cell_size, cell_size, cell_size))
 
@@ -307,7 +309,6 @@ def setting_modal():
                 elif len(player_name) < 15:
                     player_name += event.unicode
                     padding += 3
-                    print(padding)
 
             if event.type == pygame.QUIT:
                 return "exit"
