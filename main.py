@@ -34,7 +34,7 @@ def load_settings():
         settings = {
             "game_mode": "wall",
             "speed_up_mode": False,
-            "random_wall_mode": True,
+            "random_wall_mode": False,
             "random_wall_count": 5,
             "player_name": "Guest",
             "high_score": 0
@@ -48,7 +48,6 @@ snake = [(10, 9), (10, 8), (10, 7)]
 food = (random.randint(0, cols - 1), random.randint(0, rows - 1))
 direction = (1, 0)
 random_wall_dest = []
-number_of_random_wall = settings["random_wall_count"]
 score = 0
 base_speed = 10
 running = True
@@ -92,9 +91,13 @@ def create_radio_button(x,y,selected=False, label=""):
     radio_box = pygame.Rect(rect)
     return radio_box
 
-
-
-
+def count_random_walls(x,y,label):
+    global screen
+    w,h = 15,15
+    dec = pygame.draw.rect(screen, GRAY, (x,y,w,h))
+    create_text(label,"Arial",20,BLACK,x + w*2 - 3,y + h/2 - 2)
+    inc = pygame.draw.rect(screen, GRAY, (x+35,y,w,h))
+    return dec, inc
 
 
 
@@ -125,7 +128,7 @@ def draw():
 def random_wall():
     len_wall = 4
     if settings["random_wall_mode"]:
-        while len(random_wall_dest) < number_of_random_wall :
+        while len(random_wall_dest) < settings["random_wall_count"] :
 
             wall = []
             dir_wall = random.choice(["v", "h"])
@@ -326,7 +329,9 @@ def setting_modal():
     input_active_player = False
     padding = 0
     mode_game = settings["game_mode"]
-    random_wall_mode = "off"
+    random_wall_mode = "on" if settings["random_wall_mode"] else "off"
+    count = settings["random_wall_count"]
+    speed_up = "on" if settings["speed_up_mode"] else "off"
     while True:
         screen.fill(BLACK)
 
@@ -343,10 +348,14 @@ def setting_modal():
         radio_random_wall_on = create_radio_button(modal_x + modal_w // 4 + 200,modal_y + 70,True if random_wall_mode == "on" else False,"On")
         radio_random_wall_off = create_radio_button(modal_x + modal_w // 4 + 250,modal_y + 70,True if random_wall_mode == "off" else False,"Off")
         create_text("Speed Up Mode: ","Arial",15,RED,modal_x + modal_w // 4 - 10 , modal_y + 100)
+        radio_speed_on = create_radio_button(modal_x + modal_w // 4 + 50, modal_y + 100,True if speed_up == "on" else False, "On")
+        radio_speed_off = create_radio_button(modal_x + modal_w // 4 + 90, modal_y + 100,True if speed_up == "off" else False, "Off")
         if input_active_player or input_empty:
             color = GRAY
         else:
             color = WHITE
+        if random_wall_mode == "on":
+            dec, inc = count_random_walls(modal_x + modal_w // 4 + 200,modal_y + 90,count)
         pygame.draw.rect(screen, color, input_box)
 
         create_text(settings["player_name"], "Arial", 15, BLACK, input_box.x + 25 + padding, input_box.y + 12)
@@ -368,6 +377,19 @@ def setting_modal():
                     elif radio_tunnel.collidepoint(event.pos):
                         mode_game = "tunnel"
                         settings["game_mode"] = "tunnel"
+                    if radio_speed_on.collidepoint(event.pos):
+                        speed_up = "on"
+                        settings["speed_up_mode"] = True
+                    elif radio_speed_off.collidepoint(event.pos):
+                        speed_up = "off"
+                        settings["speed_up_mode"] = False
+                    if random_wall_mode == "on":
+                        if inc.collidepoint(event.pos):
+                            count += 1
+                            settings["random_wall_count"] = count
+                        elif dec.collidepoint(event.pos):
+                            count = max(1, count - 1)
+                            settings["random_wall_count"] = count
                     if radio_random_wall_on.collidepoint(event.pos):
                         random_wall_mode = "on"
                         settings["random_wall_mode"] = True
@@ -390,8 +412,8 @@ def setting_modal():
                 return "exit"
             elif event.type == pygame.MOUSEBUTTONUP:
                 if btn_s.collidepoint(event.pos):
+                    save_settings()
                     if len(settings["player_name"]) > 0:
-                        save_settings()
                         return "start"
                 if btn_e.collidepoint(event.pos):
                     running = False
